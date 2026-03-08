@@ -1,0 +1,20 @@
+artifacts_root: artifacts
+
+# Data Ingestion related configs
+# now I am using any data source, so I am not adding any data ingestion related configs here. I will add those when I will be using any data source.
+
+data_ingestion:
+  unzip_dir: artifacts/data_ingestion
+
+preparare_base_model:
+  root_dir: artifacts/prepared_base_model
+  base_model_path: artifacts/prepared_base_model/base_model.h5
+  updated_base_model_path: artifacts/prepared_base_model/updated_base_model.h5
+
+training:
+  root_dir: artifacts/training
+  trained_model_path: artifacts/training/model.h5
+
+evaluation:
+  root_dir: artifacts/evaluation
+  path_of_model: artifacts/training/model.h5

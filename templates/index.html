@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chicken Disease Detection</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-secondary: #12121a;
+            --bg-card: #1a1a2e;
+            --bg-card-hover: #1f1f35;
+            --border: #2a2a3e;
+            --text-primary: #e8e8f0;
+            --text-secondary: #8888a0;
+            --text-muted: #55556a;
+            --accent: #6c63ff;
+            --accent-hover: #7b73ff;
+            --accent-glow: rgba(108, 99, 255, 0.15);
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f39c12;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Background gradient effect */
+        body::before {
+            content: '';
+            position: fixed;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle at 30% 20%, rgba(108, 99, 255, 0.04) 0%, transparent 50%),
+                        radial-gradient(circle at 70% 80%, rgba(46, 204, 113, 0.03) 0%, transparent 50%);
+            z-index: -1;
+        }
+
+        /* Header */
+        .header {
+            padding: 2rem 0;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            background: var(--bg-secondary);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--text-primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .header p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 300;
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 2.5rem 1.5rem;
+        }
+
+        /* Grid Layout */
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            background: var(--bg-card-hover);
+            border-color: rgba(108, 99, 255, 0.3);
+        }
+
+        .card-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-desc {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 3rem 2rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .upload-area:hover {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        .upload-area.has-image {
+            padding: 1rem;
+            border-color: var(--accent);
+        }
+
+        .upload-icon {
+            width: 48px;
+            height: 48px;
+            margin: 0 auto 1rem;
+            opacity: 0.5;
+        }
+
+        .upload-icon svg {
+            width: 100%;
+            height: 100%;
+            stroke: var(--text-secondary);
+        }
+
+        .upload-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .upload-hint {
+            color: var(--text-muted);
+            font-size: 0.75rem;
+        }
+
+        .upload-area.has-image .upload-icon,
+        .upload-area.has-image .upload-text,
+        .upload-area.has-image .upload-hint {
+            display: none;
+        }
+
+        #imagePreview {
+            display: none;
+            max-width: 100%;
+            max-height: 280px;
+            border-radius: 8px;
+            object-fit: contain;
+        }
+
+        .upload-area.has-image #imagePreview {
+            display: block;
+            margin: 0 auto;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* Buttons */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1.75rem;
+            border: none;
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 4px 20px rgba(108, 99, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .btn-primary:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-outline {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-outline:hover {
+            border-color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        /* Result Section */
+        .result-section {
+            grid-column: 1 / -1;
+        }
+
+        .result-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem;
+            text-align: center;
+            display: none;
+        }
+
+        .result-card.visible {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .result-label {
+            font-size: 0.8rem;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+        }
+
+        .result-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .result-value.healthy {
+            color: var(--success);
+        }
+
+        .result-value.coccidiosis {
+            color: var(--danger);
+        }
+
+        .result-desc {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.6;
+            max-width: 500px;
+            margin: 0 auto;
+        }
+
+        /* Status indicator */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.75rem 1rem;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-top: 1rem;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            flex-shrink: 0;
+        }
+
+        .status-dot.loading {
+            background: var(--warning);
+            animation: pulse 1s ease infinite;
+        }
+
+        .status-dot.error {
+            background: var(--danger);
+        }
+
+        /* Spinner */
+        .spinner {
+            display: none;
+            width: 18px;
+            height: 18px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        .btn.loading .spinner {
+            display: block;
+        }
+
+        .btn.loading .btn-text {
+            opacity: 0.7;
+        }
+
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 2rem 0;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            border-top: 1px solid var(--border);
+            margin-top: 2rem;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header h1 {
+                font-size: 1.5rem;
+            }
+
+            .container {
+                padding: 1.5rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Chicken Disease Detection</h1>
+        <p>Upload a fecal image to classify between Healthy and Coccidiosis</p>
+    </div>
+
+    <div class="container">
+        <div class="grid">
+            <!-- Upload & Predict Card -->
+            <div class="card">
+                <div class="card-title">Classify Image</div>
+                <div class="card-desc">
+                    Upload a chicken fecal sample image. The model will analyze it
+                    and determine whether the sample indicates a healthy chicken or
+                    signs of Coccidiosis.
+                </div>
+
+                <div class="upload-area" id="uploadArea" onclick="document.getElementById('fileInput').click()">
+                    <div class="upload-icon">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                        </svg>
+                    </div>
+                    <div class="upload-text">Click to upload an image</div>
+                    <div class="upload-hint">JPG, PNG -- max 10MB</div>
+                    <img id="imagePreview" alt="Preview">
+                </div>
+
+                <input type="file" id="fileInput" accept="image/*" onchange="handleFileSelect(event)">
+
+                <button class="btn btn-primary" id="predictBtn" onclick="predict()" disabled>
+                    <span class="spinner"></span>
+                    <span class="btn-text">Analyze Image</span>
+                </button>
+            </div>
+
+            <!-- Train & Info Card -->
+            <div class="card">
+                <div class="card-title">Model Training</div>
+                <div class="card-desc">
+                    Retrain the VGG16-based classification model on the chicken fecal
+                    image dataset. This will run the full pipeline including base model
+                    preparation, training, and evaluation.
+                </div>
+
+                <button class="btn btn-outline" id="trainBtn" onclick="trainModel()" style="margin-bottom: 1.5rem;">
+                    <span class="spinner"></span>
+                    <span class="btn-text">Start Training</span>
+                </button>
+
+                <div style="border-top: 1px solid var(--border); padding-top: 1.5rem;">
+                    <div class="card-title">About the Model</div>
+                    <div class="card-desc" style="margin-bottom: 0;">
+                        Built on VGG16 with transfer learning. The model is trained to
+                        distinguish between healthy chicken fecal samples and those
+                        showing signs of Coccidiosis -- a common parasitic disease in
+                        poultry that affects the intestinal tract.
+                    </div>
+                </div>
+
+                <div class="status-bar" id="statusBar">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText">Model ready</span>
+                </div>
+            </div>
+
+            <!-- Result -->
+            <div class="result-section">
+                <div class="result-card" id="resultCard">
+                    <div class="result-label">Classification Result</div>
+                    <div class="result-value" id="resultValue">--</div>
+                    <div class="result-desc" id="resultDesc"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="footer">
+            Chicken Disease Detection -- End-to-End Deep Learning Project
+        </div>
+    </div>
+
+    <script>
+        let base64Image = null;
+
+        function handleFileSelect(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const img = document.getElementById('imagePreview');
+                img.src = e.target.result;
+
+                const uploadArea = document.getElementById('uploadArea');
+                uploadArea.classList.add('has-image');
+
+                // Extract base64 data (remove prefix like "data:image/jpeg;base64,")
+                base64Image = e.target.result.split(',')[1];
+
+                document.getElementById('predictBtn').disabled = false;
+
+                // Hide previous result
+                document.getElementById('resultCard').classList.remove('visible');
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function predict() {
+            if (!base64Image) return;
+
+            const btn = document.getElementById('predictBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            setStatus('loading', 'Analyzing image...');
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ image: base64Image })
+                });
+
+                const data = await response.json();
+                const prediction = data[0].image;
+
+                const resultCard = document.getElementById('resultCard');
+                const resultValue = document.getElementById('resultValue');
+                const resultDesc = document.getElementById('resultDesc');
+
+                resultValue.textContent = prediction;
+                resultValue.className = 'result-value';
+
+                if (prediction === 'Healthy') {
+                    resultValue.classList.add('healthy');
+                    resultDesc.textContent = 'The sample appears to be from a healthy chicken. No signs of Coccidiosis were detected in the fecal image.';
+                } else {
+                    resultValue.classList.add('coccidiosis');
+                    resultDesc.textContent = 'The sample shows signs of Coccidiosis. This parasitic infection affects the intestinal tract and may require veterinary attention.';
+                }
+
+                resultCard.classList.add('visible');
+                setStatus('success', 'Analysis complete');
+            } catch (error) {
+                setStatus('error', 'Analysis failed -- please try again');
+                console.error(error);
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        async function trainModel() {
+            const btn = document.getElementById('trainBtn');
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            setStatus('loading', 'Training in progress -- this may take a few minutes...');
+
+            try {
+                const response = await fetch('/train', { method: 'GET' });
+                const text = await response.text();
+                setStatus('success', 'Training completed successfully');
+            } catch (error) {
+                setStatus('error', 'Training failed -- check server logs');
+                console.error(error);
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        function setStatus(type, message) {
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+
+            dot.className = 'status-dot';
+            if (type === 'loading') dot.classList.add('loading');
+            if (type === 'error') dot.classList.add('error');
+
+            text.textContent = message;
+        }
+
+        // Drag & drop support
+        const uploadArea = document.getElementById('uploadArea');
+
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = 'var(--accent)';
+            uploadArea.style.background = 'var(--accent-glow)';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '';
+            uploadArea.style.background = '';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '';
+            uploadArea.style.background = '';
+
+            const file = e.dataTransfer.files[0];
+            if (file && file.type.startsWith('image/')) {
+                const input = document.getElementById('fileInput');
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                input.files = dt.files;
+                handleFileSelect({ target: input });
+            }
+        });
+    </script>
+</body>
+</html>
